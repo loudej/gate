@@ -18,7 +18,7 @@ namespace Gate.Middleware.Tests
             var app = new FakeApp("200 OK");
 
             Action<IAppBuilder> pipeline = b => b
-                .UseBasicAuth("Howdy", (username, password) => password == "Howdy")
+                .UseBasicAuth("Howdy", (username, password) => password == "Howdy", options => options.WithDenyAnonymous())
                 .Run(app.AppDelegate);
 
             var config = AppBuilder.BuildConfiguration(pipeline);
@@ -44,11 +44,10 @@ namespace Gate.Middleware.Tests
         }
 
         [Test]
-        public void Basic_auth_returns_bad_request_when_different_auth_scheme_is_used()
+        public void Basic_auth_returns_challenge_when_different_auth_scheme_is_used()
         {
-            Request(new Dictionary<string, IEnumerable<string>> {{"Authorization", new[] {"Digest blah"}}}, 
-                response => Assert.That(response.Status, Is.EqualTo("400 Bad Request")))
-            ;
+            Request(new Dictionary<string, IEnumerable<string>> { { "Authorization", new[] { "Digest blah" } } },
+                AssertBasicAuthChallenge);
         }
 
         private void AssertBasicAuthChallenge(FakeHostResponse response)
